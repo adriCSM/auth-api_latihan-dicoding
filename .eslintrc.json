@@ -9,5 +9,8 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
-  "rules": {}
+  "rules": {
+    "operator-linebreak": "warn",
+    "class-methods-use-this": "off"
+  }
 }
