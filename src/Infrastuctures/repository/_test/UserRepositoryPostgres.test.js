@@ -1,0 +1,83 @@
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const InvariantError = require('../../../Commons/exeptions/InvariantError');
+const RegisterUser = require('../../../Domains/users/entities/RegisterUser');
+const RegisteredUser = require('../../../Domains/users/entities/RegisteredUser');
+const pool = require('../../database/postgres/pool');
+const UserRepositoryPostgres = require('../UserRepositoryPostgres');
+
+describe('UserRepositoryPostgres', () => {
+  afterEach(async () => {
+    await UsersTableTestHelper.cleanTable();
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  describe('VerifyAvailableUsername function', () => {
+    it('shoult throw invariant error when username not availbale', async () => {
+      // Arrange
+      await UsersTableTestHelper.addUser({ username: 'adricsm' });
+      const userRepositoryPostgres = new UserRepositoryPostgres(pool, {});
+
+      // Action dan Assert
+      await expect(userRepositoryPostgres.verifyAvailableUsername('adricsm')).rejects.toThrowError(
+        InvariantError,
+      );
+    });
+
+    it('should not throw InvariantError when username available', async () => {
+      // Arrange
+      const userRepositoryPostgres = new UserRepositoryPostgres(pool, {});
+
+      // Action & Assert
+      await expect(
+        userRepositoryPostgres.verifyAvailableUsername('dicoding'),
+      ).resolves.not.toThrowError(InvariantError);
+    });
+  });
+
+  describe('addUser function', () => {
+    it('should persist register user', async () => {
+      // Arrange
+      const registerUser = new RegisterUser({
+        username: 'adricsm',
+        password: 'mangidi7',
+        fullname: 'adri candra',
+      });
+      const fakeIdGenerator = () => '123'; // stub!
+      const userRepositoryPostgres = new UserRepositoryPostgres(pool, fakeIdGenerator);
+
+      // Action
+      await userRepositoryPostgres.addUser(registerUser);
+
+      // Assert
+      const users = await UsersTableTestHelper.findUsersById('user-123');
+
+      expect(users).toHaveLength(1);
+    });
+
+    it('should return registered user correctly', async () => {
+      // Arrange
+      const registerUser = new RegisterUser({
+        username: 'adricsm',
+        password: 'mangidi7',
+        fullname: 'adri candra',
+      });
+      const fakeIdGenerator = () => '123'; // stub!
+      const userRepositoryPostgres = new UserRepositoryPostgres(pool, fakeIdGenerator);
+
+      // Action
+      const registeredUser = await userRepositoryPostgres.addUser(registerUser);
+
+      // Assert
+      expect(registeredUser).toStrictEqual(
+        new RegisteredUser({
+          id: 'user-123',
+          username: 'adricsm',
+          fullname: 'adri candra',
+        }),
+      );
+    });
+  });
+});

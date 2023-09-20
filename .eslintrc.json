@@ -12,6 +12,8 @@
   "rules": {
     "operator-linebreak": "warn",
     "class-methods-use-this": "off",
-    "no-underscore-dangle": "off"
+    "no-underscore-dangle": "off",
+    "no-unused-vars": "off",
+    "import/no-extraneous-dependencies": "off"
   }
 }
